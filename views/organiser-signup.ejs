@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instructor Sign Up Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="organiser-theme auth-page-theme">
+    <main class="auth-page">
+        <section class="auth-card">
+            <p class="home-kicker">Create instructor account</p>
+            <h1>Instructor Sign Up</h1>
+            <p class="auth-intro">
+                Create an instructor account to access the class management pages.
+            </p>
+
+            <% if (error) { %>
+                <div class="inline-error-message" role="alert">
+                    <strong>Error</strong>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <form action="/organiser/signup" method="POST" class="auth-form">
+                <div>
+                    <label for="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        autocomplete="username"
+                        required
+                    >
+                    <p class="form-note">
+                        Use at least 3 characters. Letters, numbers and underscores only.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <p class="form-note">
+                        Use at least 6 characters.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="confirm_password">Confirm password</label>
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <button type="submit">Create Account</button>
+            </form>
+
+            <p class="auth-switch-text">
+                Already have an instructor account?
+                <a href="/organiser/login">Login here</a>.
+            </p>
+
+            <p class="page-actions auth-back-link">
+                <a href="/">Back to Studio Class Home</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Class Booking Dashboard</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="organiser-theme">
+    <main>
+        <h1>Class Booking Dashboard</h1>
+
+        <%
+            function formatDateForDisplay(dateString) {
+                if (!dateString) {
+                    return "";
+                }
+
+                const dateParts = dateString.split("-");
+
+                if (dateParts.length !== 3) {
+                    return dateString;
+                }
+
+                const day = dateParts[2];
+                const monthNumber = Number(dateParts[1]);
+                const year = dateParts[0];
+
+                const monthNames = [
+                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                ];
+
+                const monthName = monthNames[monthNumber - 1];
+
+                if (!monthName) {
+                    return dateString;
+                }
+
+                return `${day} ${monthName} ${year}`;
+            }
+
+            function formatTimeForDisplay(timeString) {
+                if (!timeString) {
+                    return "";
+                }
+
+                const timeParts = timeString.split(":");
+
+                if (timeParts.length < 2) {
+                    return timeString;
+                }
+
+                let hour = Number(timeParts[0]);
+                const minute = timeParts[1];
+                const period = hour >= 12 ? "PM" : "AM";
+
+                hour = hour % 12;
+
+                if (hour === 0) {
+                    hour = 12;
+                }
+
+                return `${hour}:${minute} ${period}`;
+            }
+        %>
+
+        <section class="page-intro-card">
+            <h2><%= event.event_title %></h2>
+            <p><%= event.event_description %></p>
+
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <span class="detail-label">Class date</span>
+                    <span class="date-main"><%= formatDateForDisplay(event.event_date) %></span>
+                </div>
+
+                <div class="detail-card">
+                    <span class="detail-label">Status</span>
+                    <span class="event-status-label"><%= event.status %></span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Ticket Summary</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticket Type</th>
+                        <th>Total Tickets</th>
+                        <th>Booked</th>
+                        <th>Remaining</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Full-price</td>
+                        <td><%= event.full_price_ticket_quantity %></td>
+                        <td><%= event.full_price_booked %></td>
+                        <td><%= event.full_price_remaining %></td>
+                        <td>$<%= Number(event.full_price_ticket_price).toFixed(2) %></td>
+                    </tr>
+                    <tr>
+                        <td>Concession</td>
+                        <td><%= event.concession_ticket_quantity %></td>
+                        <td><%= event.concession_booked %></td>
+                        <td><%= event.concession_remaining %></td>
+                        <td>$<%= Number(event.concession_ticket_price).toFixed(2) %></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="dashboard-summary">
+                <div class="summary-pill">
+                    <span class="detail-label">Total tickets booked</span>
+                    <strong><%= event.total_tickets_booked %></strong>
+                </div>
+
+                <div class="summary-pill">
+                    <span class="detail-label">Total revenue</span>
+                    <strong>$<%= Number(event.total_revenue).toFixed(2) %></strong>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Individual Bookings</h2>
+
+            <% if (bookings.length === 0) { %>
+                <p>No bookings have been made for this class yet.</p>
+            <% } else { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Member Name</th>
+                            <th>Full-price Tickets</th>
+                            <th>Concession Tickets</th>
+                            <th>Booking Revenue</th>
+                            <th>Booking Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% bookings.forEach(function(booking) { %>
+                            <tr>
+                                <td><%= booking.attendee_name %></td>
+                                <td><%= booking.full_price_quantity %></td>
+                                <td><%= booking.concession_quantity %></td>
+                                <td>$<%= Number(booking.booking_revenue).toFixed(2) %></td>
+                                <td class="date-time-cell">
+                                    <span class="date-main"><%= formatDateForDisplay(booking.booking_date ? booking.booking_date.split(" ")[0] : "") %></span>
+                                    <span class="date-sub"><%= formatTimeForDisplay(booking.booking_date ? booking.booking_date.split(" ")[1] : "") %></span>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        </section>
+
+        <p class="page-actions">
+            <a href="/organiser">Back to Instructor Dashboard</a>
+        </p>
+    </main>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Studio Class Settings</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="organiser-theme">
+    <main>
+        <h1>Studio Class Settings</h1>
+
+        <% if (error) { %>
+            <div class="popup-overlay">
+                <div class="popup-message popup-error" role="alert">
+                    <button
+                        type="button"
+                        class="popup-close"
+                        onclick="this.closest('.popup-overlay').remove();"
+                        aria-label="Close error message"
+                    >
+                        ×
+                    </button>
+
+                    <strong>Error</strong>
+                    <span><%= error %></span>
+                </div>
+            </div>
+        <% } %>
+
+        <section class="page-intro-card">
+            <h2>Website details</h2>
+            <p>
+                Update the name and description shown on both the instructor dashboard and class booking portal.
+            </p>
+        </section>
+
+        <section class="form-card">
+            <h2>Edit site information</h2>
+
+            <form action="/organiser/settings" method="POST">
+                <div>
+                    <label for="site_name">Site name</label>
+                    <input
+                        type="text"
+                        id="site_name"
+                        name="site_name"
+                        value="<%= settings.site_name %>"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="site_description">Site description</label>
+                    <textarea
+                        id="site_description"
+                        name="site_description"
+                        required
+                    ><%= settings.site_description %></textarea>
+                </div>
+
+                <button type="submit">Update Settings</button>
+            </form>
+        </section>
+
+        <p class="page-actions">
+            <a href="/organiser">Back to Instructor Dashboard</a>
+        </p>
+    </main>
+</body>
+</html>

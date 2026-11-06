@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Class Details Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="attendee-theme">
+    <main>
+        <h1>Class Details Page</h1>
+
+        <%
+            function formatDateForDisplay(dateString) {
+                if (!dateString) {
+                    return "";
+                }
+
+                const dateParts = dateString.split("-");
+
+                if (dateParts.length !== 3) {
+                    return dateString;
+                }
+
+                const day = dateParts[2];
+                const monthNumber = Number(dateParts[1]);
+                const year = dateParts[0];
+
+                const monthNames = [
+                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                ];
+
+                const monthName = monthNames[monthNumber - 1];
+
+                if (!monthName) {
+                    return dateString;
+                }
+
+                return `${day} ${monthName} ${year}`;
+            }
+
+            function formatTimeForDisplay(timeString) {
+                if (!timeString) {
+                    return "";
+                }
+
+                const timeParts = timeString.split(":");
+
+                if (timeParts.length < 2) {
+                    return timeString;
+                }
+
+                let hour = Number(timeParts[0]);
+                const minute = timeParts[1];
+                const period = hour >= 12 ? "PM" : "AM";
+
+                hour = hour % 12;
+
+                if (hour === 0) {
+                    hour = 12;
+                }
+
+                return `${hour}:${minute} ${period}`;
+            }
+
+            const fullPriceTicketsAvailable = Number(event.full_price_remaining) > 0;
+            const concessionTicketsAvailable = Number(event.concession_remaining) > 0;
+            const eventIsSoldOut =
+                !eventIsPast &&
+                !fullPriceTicketsAvailable &&
+                !concessionTicketsAvailable;
+        %>
+
+        <section class="page-intro-card">
+            <h2><%= event.event_title %></h2>
+            <p><%= event.event_description %></p>
+
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <span class="detail-label">Class date</span>
+                    <span class="date-main"><%= formatDateForDisplay(event.event_date) %></span>
+                </div>
+
+                <div class="detail-card">
+                    <span class="detail-label">Booking status</span>
+                    <% if (eventIsPast) { %>
+                        <span class="event-status-label">Booking closed</span>
+                    <% } else if (eventIsSoldOut) { %>
+                        <span class="event-status-label">Sold out</span>
+                    <% } else { %>
+                        <span class="event-status-label">Available</span>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Tickets</h2>
+
+            <div class="ticket-card-grid">
+                <div class="ticket-card">
+                    <span class="detail-label">Full-price tickets</span>
+                    <strong>$<%= Number(event.full_price_ticket_price).toFixed(2) %></strong>
+                    <span>Available: <%= event.full_price_remaining %></span>
+                </div>
+
+                <div class="ticket-card">
+                    <span class="detail-label">Concession tickets</span>
+                    <strong>$<%= Number(event.concession_ticket_price).toFixed(2) %></strong>
+                    <span>Available: <%= event.concession_remaining %></span>
+                </div>
+            </div>
+        </section>
+
+        <% if (error) { %>
+            <div class="popup-overlay">
+                <div class="popup-message popup-error" role="alert">
+                    <button
+                        type="button"
+                        class="popup-close"
+                        onclick="this.closest('.popup-overlay').remove();"
+                        aria-label="Close error message"
+                    >
+                        ×
+                    </button>
+
+                    <strong>Error</strong>
+                    <span><%= error %></span>
+                </div>
+            </div>
+        <% } %>
+
+        <% if (success) { %>
+            <div class="popup-overlay">
+                <div class="popup-message popup-success" role="status">
+                    <button
+                        type="button"
+                        class="popup-close"
+                        onclick="this.closest('.popup-overlay').remove();"
+                        aria-label="Close success message"
+                    >
+                        ×
+                    </button>
+
+                    <strong>Success</strong>
+                    <span><%= success %></span>
+                </div>
+            </div>
+        <% } %>
+
+        <section class="<%= eventIsPast || eventIsSoldOut ? 'past-events-section' : 'current-events-section' %>">
+            <% if (eventIsPast) { %>
+                <h2>Booking Closed</h2>
+                <p>
+                    This class has already taken place and is no longer available for booking.
+                </p>
+            <% } else if (eventIsSoldOut) { %>
+                <h2>Sold Out</h2>
+                <p>
+                    This class is sold out because there are no full-price or concession tickets left.
+                </p>
+                <span class="event-unavailable-text">Booking unavailable</span>
+            <% } else { %>
+                <h2>Book Class Tickets</h2>
+
+                <form action="/attendee/events/<%= event.event_id %>/book" method="POST">
+                    <div>
+                        <label for="attendee_name">Your name</label>
+                        <input
+                            type="text"
+                            id="attendee_name"
+                            name="attendee_name"
+                            value="<%= formData.attendee_name %>"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-grid">
+                        <div>
+                            <label for="full_price_quantity">Number of full-price tickets</label>
+
+                            <% if (fullPriceTicketsAvailable) { %>
+                                <input
+                                    type="number"
+                                    id="full_price_quantity"
+                                    name="full_price_quantity"
+                                    min="0"
+                                    max="<%= event.full_price_remaining %>"
+                                    step="1"
+                                    value="<%= formData.full_price_quantity %>"
+                                    required
+                                >
+                            <% } else { %>
+                                <input
+                                    type="number"
+                                    id="full_price_quantity"
+                                    min="0"
+                                    value="0"
+                                    disabled
+                                >
+                                <input
+                                    type="hidden"
+                                    name="full_price_quantity"
+                                    value="0"
+                                >
+                                <p>Full-price tickets are sold out.</p>
+                            <% } %>
+                        </div>
+
+                        <div>
+                            <label for="concession_quantity">Number of concession tickets</label>
+
+                            <% if (concessionTicketsAvailable) { %>
+                                <input
+                                    type="number"
+                                    id="concession_quantity"
+                                    name="concession_quantity"
+                                    min="0"
+                                    max="<%= event.concession_remaining %>"
+                                    step="1"
+                                    value="<%= formData.concession_quantity %>"
+                                    required
+                                >
+                            <% } else { %>
+                                <input
+                                    type="number"
+                                    id="concession_quantity"
+                                    min="0"
+                                    value="0"
+                                    disabled
+                                >
+                                <input
+                                    type="hidden"
+                                    name="concession_quantity"
+                                    value="0"
+                                >
+                                <p>Concession tickets are sold out.</p>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <button type="submit">Book</button>
+                </form>
+            <% } %>
+        </section>
+
+        <p class="page-actions">
+            <a href="/attendee">Back to Class Booking Portal</a>
+        </p>
+    </main>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Class Booking Portal</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="attendee-theme">
+    <main>
+        <h1>Class Booking Portal</h1>
+
+        <%
+            function formatDateForDisplay(dateString) {
+                if (!dateString) {
+                    return "";
+                }
+
+                const dateParts = dateString.split("-");
+
+                if (dateParts.length !== 3) {
+                    return dateString;
+                }
+
+                const day = dateParts[2];
+                const monthNumber = Number(dateParts[1]);
+                const year = dateParts[0];
+
+                const monthNames = [
+                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                ];
+
+                const monthName = monthNames[monthNumber - 1];
+
+                if (!monthName) {
+                    return dateString;
+                }
+
+                return `${day} ${monthName} ${year}`;
+            }
+
+            function formatTimeForDisplay(timeString) {
+                if (!timeString) {
+                    return "";
+                }
+
+                const timeParts = timeString.split(":");
+
+                if (timeParts.length < 2) {
+                    return timeString;
+                }
+
+                let hour = Number(timeParts[0]);
+                const minute = timeParts[1];
+                const period = hour >= 12 ? "PM" : "AM";
+
+                hour = hour % 12;
+
+                if (hour === 0) {
+                    hour = 12;
+                }
+
+                return `${hour}:${minute} ${period}`;
+            }
+        %>
+
+        <section class="page-intro-card">
+            <h2><%= settings.site_name %></h2>
+            <p><%= settings.site_description %></p>
+        </section>
+
+        <nav>
+            <a href="/">Studio Class Home</a>
+        </nav>
+
+        <section class="current-events-section">
+            <h2>Upcoming Classes</h2>
+            <p>
+                These workout classes are available to view. Booking is only available when tickets are still remaining.
+            </p>
+
+            <% if (upcomingEvents.length === 0) { %>
+                <p>No upcoming classes are available.</p>
+            <% } else { %>
+                <ul class="event-list">
+                    <% upcomingEvents.forEach(function(event) { %>
+                        <%
+                            const eventIsSoldOut =
+                                Number(event.full_price_remaining) <= 0 &&
+                                Number(event.concession_remaining) <= 0;
+                        %>
+
+                        <li class="event-list-item">
+                            <div>
+                                <h3>
+                                    <%= event.event_title %>
+                                    <% if (eventIsSoldOut) { %>
+                                        <span class="event-status-label">Sold out</span>
+                                    <% } %>
+                                </h3>
+
+                                <p class="event-date-line">
+                                    <span class="event-date-badge"><%= formatDateForDisplay(event.event_date) %></span>
+                                </p>
+
+                                <% if (eventIsSoldOut) { %>
+                                    <p>
+                                        No tickets are currently available for this class.
+                                    </p>
+                                <% } %>
+                            </div>
+
+                            <a class="event-title-button" href="/attendee/events/<%= event.event_id %>">
+                                View Class
+                            </a>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+
+        <section class="past-events-section">
+            <h2>Past Classes</h2>
+            <p>
+                These classes have already taken place and are no longer available for booking.
+            </p>
+
+            <% if (pastEvents.length === 0) { %>
+                <p>No past classes to show.</p>
+            <% } else { %>
+                <ul class="event-list">
+                    <% pastEvents.forEach(function(event) { %>
+                        <li class="event-list-item past-event-list-item">
+                            <div>
+                                <h3>
+                                    <%= event.event_title %>
+                                    <span class="event-status-label">Past class</span>
+                                </h3>
+                                <p class="event-date-line">
+                                    <span class="event-date-badge"><%= formatDateForDisplay(event.event_date) %></span>
+                                </p>
+                            </div>
+
+                            <span class="event-unavailable-text">
+                                Booking closed
+                            </span>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+    </main>
+</body>
+</html>

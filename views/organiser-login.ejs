@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instructor Login Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="organiser-theme auth-page-theme">
+    <main class="auth-page">
+        <section class="auth-card">
+            <p class="home-kicker">Instructor access</p>
+            <h1>Instructor Login</h1>
+            <p class="auth-intro">
+                Log in to manage studio settings, classes, tickets and bookings.
+            </p>
+
+            <% if (error) { %>
+                <div class="inline-error-message" role="alert">
+                    <strong>Error</strong>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <form action="/organiser/login" method="POST" class="auth-form">
+                <div>
+                    <label for="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <button type="submit">Login</button>
+            </form>
+
+            <p class="auth-switch-text">
+                Do not have an instructor account yet?
+                <a href="/organiser/signup">Create one here</a>.
+            </p>
+
+            <p class="page-actions auth-back-link">
+                <a href="/">Back to Studio Class Home</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

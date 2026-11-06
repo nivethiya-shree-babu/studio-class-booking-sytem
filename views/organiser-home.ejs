@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instructor Dashboard</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="organiser-theme">
+    <main>
+        <h1>Instructor Dashboard</h1>
+
+        <%
+            function formatDateForDisplay(dateString) {
+                if (!dateString) {
+                    return "";
+                }
+
+                const dateParts = dateString.split("-");
+
+                if (dateParts.length !== 3) {
+                    return dateString;
+                }
+
+                const day = dateParts[2];
+                const monthNumber = Number(dateParts[1]);
+                const year = dateParts[0];
+
+                const monthNames = [
+                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                ];
+
+                const monthName = monthNames[monthNumber - 1];
+
+                if (!monthName) {
+                    return dateString;
+                }
+
+                return `${day} ${monthName} ${year}`;
+            }
+
+            function formatTimeForDisplay(timeString) {
+                if (!timeString) {
+                    return "";
+                }
+
+                const timeParts = timeString.split(":");
+
+                if (timeParts.length < 2) {
+                    return timeString;
+                }
+
+                let hour = Number(timeParts[0]);
+                const minute = timeParts[1];
+                const period = hour >= 12 ? "PM" : "AM";
+
+                hour = hour % 12;
+
+                if (hour === 0) {
+                    hour = 12;
+                }
+
+                return `${hour}:${minute} ${period}`;
+            }
+        %>
+
+        <% if (typeof message !== "undefined" && message) { %>
+            <div class="popup-overlay">
+                <div class="popup-message popup-error" role="alert">
+                    <button
+                        type="button"
+                        class="popup-close"
+                        onclick="this.closest('.popup-overlay').remove();"
+                        aria-label="Close error message"
+                    >
+                        ×
+                    </button>
+
+                    <strong>Error</strong>
+                    <span><%= message %></span>
+                </div>
+            </div>
+        <% } %>
+
+        <div id="delete-confirmation-popup" class="popup-overlay" style="display: none;">
+            <div class="popup-message popup-error" role="dialog" aria-modal="true">
+                <button
+                    type="button"
+                    class="popup-close"
+                    id="cancel-delete-x"
+                    aria-label="Close delete warning"
+                >
+                    ×
+                </button>
+
+                <strong>Delete class?</strong>
+
+                <span id="delete-confirmation-text">
+                    This class has not happened yet. Are you sure you want to delete it?
+                </span>
+
+                <div style="margin-top: 18px;">
+                    <button type="button" id="confirm-delete-button">
+                        Confirm Delete
+                    </button>
+
+                    <button type="button" id="cancel-delete-button">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <h2><%= settings.site_name %></h2>
+            <p><%= settings.site_description %></p>
+        </section>
+
+        <nav class="organiser-nav">
+            <a href="/">Studio Class Home</a>
+            <a href="/organiser/settings">Studio Class Settings</a>
+
+            <form action="/organiser/logout" method="POST" class="logout-form">
+                <button type="submit">Logout</button>
+            </form>
+        </nav>
+
+        <section class="organiser-account-card">
+            <h2>Logged in</h2>
+            <p>Current instructor account: <strong><%= organiserUsername %></strong></p>
+        </section>
+
+        <section>
+            <h2>Create Class</h2>
+
+            <form action="/organiser/events/create" method="POST">
+                <button type="submit">Create New Class</button>
+            </form>
+        </section>
+
+        <section class="current-events-section">
+            <h2>Upcoming Published Classes</h2>
+            <p>
+                These classes are still upcoming and can be shared with members.
+            </p>
+
+            <% if (upcomingPublishedEvents.length === 0) { %>
+                <p>No upcoming published classes yet.</p>
+            <% } else { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Class Date</th>
+                            <th>Created</th>
+                            <th>Published</th>
+                            <th>Full-price Tickets</th>
+                            <th>Concession Tickets</th>
+                            <th>Sharing Link</th>
+                            <th>Bookings</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% upcomingPublishedEvents.forEach(function(event) { %>
+                            <%
+                                const eventIsSoldOut =
+                                    Number(event.full_price_remaining) <= 0 &&
+                                    Number(event.concession_remaining) <= 0;
+                            %>
+
+                            <tr>
+                                <td>
+                                    <%= event.event_title %>
+                                    <% if (eventIsSoldOut) { %>
+                                        <span class="event-status-label">Sold out</span>
+                                    <% } %>
+                                </td>
+                                <td class="date-time-cell"><span class="date-main"><%= formatDateForDisplay(event.event_date) %></span></td>
+                                <td class="date-time-cell">
+                                    <span class="date-main"><%= formatDateForDisplay(event.created_at ? event.created_at.split(" ")[0] : "") %></span>
+                                    <span class="date-sub"><%= formatTimeForDisplay(event.created_at ? event.created_at.split(" ")[1] : "") %></span>
+                                </td>
+                                <td class="date-time-cell">
+                                    <span class="date-main"><%= formatDateForDisplay(event.published_at ? event.published_at.split(" ")[0] : "") %></span>
+                                    <span class="date-sub"><%= formatTimeForDisplay(event.published_at ? event.published_at.split(" ")[1] : "") %></span>
+                                </td>
+                                <td>
+                                    <%= event.full_price_ticket_quantity %> tickets at $<%= event.full_price_ticket_price %>
+                                </td>
+                                <td>
+                                    <%= event.concession_ticket_quantity %> tickets at $<%= event.concession_ticket_price %>
+                                </td>
+                                <td>
+                                    <a href="/attendee/events/<%= event.event_id %>">
+                                        View class booking page
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="/organiser/events/<%= event.event_id %>/bookings">
+                                        View bookings
+                                    </a>
+                                </td>
+                                <td>
+                                    <form
+                                        action="/organiser/events/<%= event.event_id %>/delete"
+                                        method="POST"
+                                        class="delete-event-form"
+                                        data-event-title="<%= event.event_title %>"
+                                        data-event-date="<%= event.event_date %>"
+                                    >
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        </section>
+
+        <section class="past-events-section">
+            <h2>Past Published Classes</h2>
+            <p>
+                These classes have already taken place and are kept here for instructor records.
+            </p>
+
+            <% if (pastPublishedEvents.length === 0) { %>
+                <p>No past published classes yet.</p>
+            <% } else { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Class Date</th>
+                            <th>Created</th>
+                            <th>Published</th>
+                            <th>Full-price Tickets</th>
+                            <th>Concession Tickets</th>
+                            <th>Bookings</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% pastPublishedEvents.forEach(function(event) { %>
+                            <tr>
+                                <td>
+                                    <%= event.event_title %>
+                                    <span class="event-status-label">Past class</span>
+                                </td>
+                                <td class="date-time-cell"><span class="date-main"><%= formatDateForDisplay(event.event_date) %></span></td>
+                                <td class="date-time-cell">
+                                    <span class="date-main"><%= formatDateForDisplay(event.created_at ? event.created_at.split(" ")[0] : "") %></span>
+                                    <span class="date-sub"><%= formatTimeForDisplay(event.created_at ? event.created_at.split(" ")[1] : "") %></span>
+                                </td>
+                                <td class="date-time-cell">
+                                    <span class="date-main"><%= formatDateForDisplay(event.published_at ? event.published_at.split(" ")[0] : "") %></span>
+                                    <span class="date-sub"><%= formatTimeForDisplay(event.published_at ? event.published_at.split(" ")[1] : "") %></span>
+                                </td>
+                                <td>
+                                    <%= event.full_price_ticket_quantity %> tickets at $<%= event.full_price_ticket_price %>
+                                </td>
+                                <td>
+                                    <%= event.concession_ticket_quantity %> tickets at $<%= event.concession_ticket_price %>
+                                </td>
+                                <td>
+                                    <a href="/organiser/events/<%= event.event_id %>/bookings">
+                                        View bookings
+                                    </a>
+                                </td>
+                                <td>
+                                    <form
+                                        action="/organiser/events/<%= event.event_id %>/delete"
+                                        method="POST"
+                                        class="delete-event-form"
+                                        data-event-title="<%= event.event_title %>"
+                                        data-event-date="<%= event.event_date %>"
+                                    >
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        </section>
+
+        <section>
+            <h2>Draft Classes</h2>
+
+            <% if (draftEvents.length === 0) { %>
+                <p>No draft classes yet.</p>
+            <% } else { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Class Date</th>
+                            <th>Created</th>
+                            <th>Published</th>
+                            <th>Full-price Tickets</th>
+                            <th>Concession Tickets</th>
+                            <th>Edit</th>
+                            <th>Publish</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% draftEvents.forEach(function(event) { %>
+                            <tr>
+                                <td><%= event.event_title %></td>
+                                <td class="date-time-cell"><span class="date-main"><%= formatDateForDisplay(event.event_date) %></span></td>
+                                <td class="date-time-cell">
+                                    <span class="date-main"><%= formatDateForDisplay(event.created_at ? event.created_at.split(" ")[0] : "") %></span>
+                                    <span class="date-sub"><%= formatTimeForDisplay(event.created_at ? event.created_at.split(" ")[1] : "") %></span>
+                                </td>
+                                <td class="date-time-cell">
+                                    <% if (event.published_at) { %>
+                                        <span class="date-main"><%= formatDateForDisplay(event.published_at.split(" ")[0]) %></span>
+                                        <span class="date-sub"><%= formatTimeForDisplay(event.published_at.split(" ")[1]) %></span>
+                                    <% } else { %>
+                                        Not published
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <%= event.full_price_ticket_quantity %> tickets at $<%= event.full_price_ticket_price %>
+                                </td>
+                                <td>
+                                    <%= event.concession_ticket_quantity %> tickets at $<%= event.concession_ticket_price %>
+                                </td>
+                                <td>
+                                    <a href="/organiser/events/<%= event.event_id %>/edit">Edit</a>
+                                </td>
+                                <td>
+                                    <form action="/organiser/events/<%= event.event_id %>/publish" method="POST">
+                                        <button type="submit">Publish</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form
+                                        action="/organiser/events/<%= event.event_id %>/delete"
+                                        method="POST"
+                                        class="delete-event-form"
+                                        data-event-title="<%= event.event_title %>"
+                                        data-event-date="<%= event.event_date %>"
+                                    >
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        </section>
+    </main>
+
+    <script>
+        const deleteForms = document.querySelectorAll(".delete-event-form");
+        const deletePopup = document.getElementById("delete-confirmation-popup");
+        const deleteConfirmationText = document.getElementById("delete-confirmation-text");
+        const confirmDeleteButton = document.getElementById("confirm-delete-button");
+        const cancelDeleteButton = document.getElementById("cancel-delete-button");
+        const cancelDeleteX = document.getElementById("cancel-delete-x");
+
+        let formToDelete = null;
+
+        function getTodayDateString() {
+            const today = new Date();
+
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, "0");
+            const day = String(today.getDate()).padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
+        }
+
+        function openDeletePopup() {
+            deletePopup.style.display = "flex";
+        }
+
+        function closeDeletePopup() {
+            deletePopup.style.display = "none";
+            formToDelete = null;
+        }
+
+        deleteForms.forEach(function(form) {
+            form.addEventListener("submit", function(event) {
+                const eventDate = form.dataset.eventDate;
+                const eventTitle = form.dataset.eventTitle;
+                const todayDate = getTodayDateString();
+
+                if (eventDate > todayDate) {
+                    event.preventDefault();
+
+                    formToDelete = form;
+
+                    deleteConfirmationText.textContent =
+                        `"${eventTitle}" has not happened yet. Are you sure you want to delete this class?`;
+
+                    openDeletePopup();
+                }
+            });
+        });
+
+        confirmDeleteButton.addEventListener("click", function() {
+            if (formToDelete) {
+                formToDelete.submit();
+            }
+        });
+
+        cancelDeleteButton.addEventListener("click", closeDeletePopup);
+        cancelDeleteX.addEventListener("click", closeDeletePopup);
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instructor Edit Class Page</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body class="organiser-theme">
+    <main>
+        <h1>Instructor Edit Class Page</h1>
+
+        <%
+            function formatDateForDisplay(dateString) {
+                if (!dateString) {
+                    return "";
+                }
+
+                const dateParts = dateString.split("-");
+
+                if (dateParts.length !== 3) {
+                    return dateString;
+                }
+
+                const day = dateParts[2];
+                const monthNumber = Number(dateParts[1]);
+                const year = dateParts[0];
+
+                const monthNames = [
+                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                ];
+
+                const monthName = monthNames[monthNumber - 1];
+
+                if (!monthName) {
+                    return dateString;
+                }
+
+                return `${day} ${monthName} ${year}`;
+            }
+
+            function formatTimeForDisplay(timeString) {
+                if (!timeString) {
+                    return "";
+                }
+
+                const timeParts = timeString.split(":");
+
+                if (timeParts.length < 2) {
+                    return timeString;
+                }
+
+                let hour = Number(timeParts[0]);
+                const minute = timeParts[1];
+                const period = hour >= 12 ? "PM" : "AM";
+
+                hour = hour % 12;
+
+                if (hour === 0) {
+                    hour = 12;
+                }
+
+                return `${hour}:${minute} ${period}`;
+            }
+        %>
+
+        <% if (error) { %>
+            <div class="popup-overlay">
+                <div class="popup-message popup-error" role="alert">
+                    <button
+                        type="button"
+                        class="popup-close"
+                        onclick="this.closest('.popup-overlay').remove();"
+                        aria-label="Close error message"
+                    >
+                        ×
+                    </button>
+
+                    <strong>Error</strong>
+                    <span><%= error %></span>
+                </div>
+            </div>
+        <% } %>
+
+        <section class="page-intro-card">
+            <h2><%= event.event_title %></h2>
+            <p>
+                Use this page to update the class details, ticket quantities and ticket prices.
+            </p>
+
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <span class="detail-label">Created</span>
+                    <span class="date-main"><%= formatDateForDisplay(event.created_at ? event.created_at.split(" ")[0] : "") %></span>
+                    <span class="date-sub"><%= formatTimeForDisplay(event.created_at ? event.created_at.split(" ")[1] : "") %></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-card">
+            <h2>Edit class details</h2>
+
+            <form action="/organiser/events/<%= event.event_id %>/edit" method="POST">
+                <div>
+                    <label for="event_title">Class title</label>
+                    <input
+                        type="text"
+                        id="event_title"
+                        name="event_title"
+                        value="<%= event.event_title %>"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="event_description">Class description</label>
+                    <textarea
+                        id="event_description"
+                        name="event_description"
+                        required
+                    ><%= event.event_description %></textarea>
+                </div>
+
+                <div>
+                    <label for="event_date">Class date</label>
+                    <input
+                        type="date"
+                        id="event_date"
+                        name="event_date"
+                        value="<%= event.event_date %>"
+                        required
+                    >
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label for="full_price_ticket_quantity">Number of full-price tickets</label>
+                        <input
+                            type="number"
+                            id="full_price_ticket_quantity"
+                            name="full_price_ticket_quantity"
+                            min="0"
+                            value="<%= event.full_price_ticket_quantity %>"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="full_price_ticket_price">Price of full-price tickets</label>
+                        <input
+                            type="number"
+                            id="full_price_ticket_price"
+                            name="full_price_ticket_price"
+                            min="0"
+                            step="0.01"
+                            value="<%= event.full_price_ticket_price %>"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="concession_ticket_quantity">Number of concession-priced tickets</label>
+                        <input
+                            type="number"
+                            id="concession_ticket_quantity"
+                            name="concession_ticket_quantity"
+                            min="0"
+                            value="<%= event.concession_ticket_quantity %>"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="concession_ticket_price">Price of concession-priced tickets</label>
+                        <input
+                            type="number"
+                            id="concession_ticket_price"
+                            name="concession_ticket_price"
+                            min="0"
+                            step="0.01"
+                            value="<%= event.concession_ticket_price %>"
+                            required
+                        >
+                        <p class="form-note">
+                            Concession tickets cannot cost more than full-price tickets.
+                        </p>
+                    </div>
+                </div>
+
+                <button type="submit">Submit Changes</button>
+            </form>
+        </section>
+
+        <p class="page-actions">
+            <a href="/organiser">Back to Instructor Dashboard</a>
+        </p>
+    </main>
+</body>
+</html>
